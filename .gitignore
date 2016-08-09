@@ -1,5 +1,6 @@
 .idea/
 .DS_Store
+.settings/
 hotspot.log
 applications/carrot2-webapp/src/jawr.properties
 applications/carrot2-webapp/web/WEB-INF/webapp-config.xml
@@ -20,3 +21,4 @@ junit*.properties
 /.tools
 /applications/carrot2-dcs/logs
 /applications/carrot2-dcs/examples/curl/*.xml
+target/

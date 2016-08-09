@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -11,8 +11,6 @@
  */
 
 package org.carrot2.source.microsoft;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,9 +34,9 @@ import org.simpleframework.xml.core.Persister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.carrot2.shaded.guava.common.base.Strings;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * A base {@link IDocumentSource} sending requests to Bing Search API in Windows Azure
@@ -317,7 +315,7 @@ public abstract class Bing3DocumentSource extends MultipageSearchEngine
         if (value != null)
         {
             String stringValue = value.toString();
-            if (!isNullOrEmpty(stringValue))
+            if (!Strings.isNullOrEmpty(stringValue))
             {
                 params.add(new BasicNameValuePair(paramName, stringValue));
             }

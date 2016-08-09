@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -24,7 +24,7 @@ import org.carrot2.matrix.factorization.IterationNumberGuesser.FactorizationQual
 import org.carrot2.source.microsoft.Bing3WebDocumentSource;
 import org.carrot2.text.preprocessing.pipeline.CompletePreprocessingPipelineDescriptor;
 
-import com.google.common.collect.Maps;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * It is possible to initialize a {@link Controller} to host a number of different
@@ -40,10 +40,6 @@ import com.google.common.collect.Maps;
  */
 public class MoreConfigurationsOfOneAlgorithmInCachingController
 {
-    @SuppressWarnings(
-    {
-        "unchecked"
-    })
     public static void main(String [] args)
     {
         /*

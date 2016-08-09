@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -22,7 +22,7 @@ import org.carrot2.util.annotations.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Lists;
 
 /**
  * Resource loading utility scanning one or more {@link IResourceLocator} locations. If
@@ -214,5 +214,10 @@ public final class ResourceLookup
         }
 
         return false;
+    }
+    
+    @Override
+    public String toString() {
+      return "[" + this.getClass().getSimpleName() + ": " + Arrays.toString(locators) + "]";
     }
 }

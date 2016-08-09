@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -22,8 +22,8 @@ import org.carrot2.util.tests.CarrotTestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * Test cases for {@link QueryWordHighlighter}.
@@ -32,6 +32,25 @@ public class QueryWordHighlighterTest extends CarrotTestCase
 {
     private Map<String, Object> attrs;
 
+
+    @Test
+    public void contentTruncation()
+    {
+        QueryWordHighlighterDescriptor.attributeBuilder(attrs)
+            .maxContentLength(5);
+
+        check(null, "12345678", "12345...");
+    }
+
+    @Test
+    public void contentTruncationAndHighlighting()
+    {
+        QueryWordHighlighterDescriptor.attributeBuilder(attrs)
+            .maxContentLength(5);
+
+        check("abc", "abc abc abc", "<b>abc</b> a...");
+    }
+    
     @Test
     public void testExcludedPatterns()
     {
@@ -53,8 +72,8 @@ public class QueryWordHighlighterTest extends CarrotTestCase
     @Test
     public void testNullQuery()
     {
-        check(null, "test", null);
-        check("", "test", null);
+        check(null, "test", "test");
+        check("", "test", "test");
     }
 
     @Test
@@ -132,8 +151,7 @@ public class QueryWordHighlighterTest extends CarrotTestCase
                 QueryWordHighlighter.class);
             
             final Document highlightedDocument = result.getDocuments().get(0);
-            assertThat(highlightedDocument.getField(Document.SUMMARY + QueryWordHighlighter.HIGHLIGHTED_FIELD_NAME_SUFFIX))
-                .isEqualTo(expectedSnippet);
+            assertThat((String) highlightedDocument.getField(Document.SUMMARY + QueryWordHighlighter.HIGHLIGHTED_FIELD_NAME_SUFFIX)).isEqualTo(expectedSnippet);
         }
         finally
         {

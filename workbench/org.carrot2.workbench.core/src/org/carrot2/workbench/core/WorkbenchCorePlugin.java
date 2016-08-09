@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -36,7 +36,6 @@ import org.carrot2.util.resource.IResourceLocator;
 import org.carrot2.util.resource.PrefixDecoratorLocator;
 import org.carrot2.util.resource.ResourceLookup;
 import org.carrot2.util.resource.ResourceLookup.Location;
-import org.carrot2.util.resource.URLResource;
 import org.carrot2.workbench.core.helpers.Utils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IContributor;
@@ -54,8 +53,8 @@ import org.osgi.framework.BundleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * The activator class (plug-in's entry point), controls the life-cycle and contains a
@@ -113,7 +112,6 @@ public class WorkbenchCorePlugin extends AbstractUIPlugin
     /**
      * Starts the bundle: scan suites and initialize the controller.
      */
-    @SuppressWarnings("unchecked")
     public void start(BundleContext context) throws Exception
     {
         super.start(context);

@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -25,14 +25,11 @@ import org.carrot2.core.ProcessingResult;
 import org.carrot2.core.attribute.CommonAttributesDescriptor;
 import org.carrot2.examples.ConsoleFormatter;
 import org.carrot2.examples.SampleDocumentData;
-import org.carrot2.source.google.GoogleDocumentSource;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 import org.carrot2.source.microsoft.Bing3WebDocumentSource;
 import org.carrot2.source.microsoft.Bing3WebDocumentSourceDescriptor;
 import org.carrot2.source.microsoft.MarketOption;
-import org.carrot2.text.clustering.MultilingualClusteringDescriptor;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * [[[start:clustering-non-english-content-intro]]]
@@ -77,7 +74,6 @@ import com.google.common.collect.Maps;
  */
 public class ClusteringNonEnglishContent
 {
-    @SuppressWarnings("unchecked")
     public static void main(String [] args)
     {
         // [[[start:clustering-non-english-content]]]
@@ -127,25 +123,6 @@ public class ClusteringNonEnglishContent
             Bing3WebDocumentSource.class, LingoClusteringAlgorithm.class);
         ConsoleFormatter.displayResults(chineseResult);
 
-        /*
-         * In the third call, we will fetch results for the same Chinese query from
-         * Google. As Google document source does not have its specific attribute for
-         * setting the language, it will not set the documents' language for us. To make
-         * sure the right lexical resources are used, we will need to set the
-         * MultilingualClustering.defaultLanguage attribute to Chinese on our own.
-         */
-        attributes.clear();
-        
-        CommonAttributesDescriptor.attributeBuilder(attributes)
-            .query("聚类" /* clustering? */)
-            .results(100);
-
-        MultilingualClusteringDescriptor.attributeBuilder(attributes)
-            .defaultLanguage(LanguageCode.CHINESE_SIMPLIFIED);
-
-        final ProcessingResult chineseResult2 = controller.process(attributes,
-            GoogleDocumentSource.class, LingoClusteringAlgorithm.class);
-        ConsoleFormatter.displayResults(chineseResult2);
         // [[[end:clustering-non-english-content]]]
     }
 }

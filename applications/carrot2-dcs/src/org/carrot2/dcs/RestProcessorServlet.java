@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -14,9 +14,14 @@ package org.carrot2.dcs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -41,6 +46,7 @@ import org.carrot2.core.Document;
 import org.carrot2.core.IClusteringAlgorithm;
 import org.carrot2.core.IDocumentSource;
 import org.carrot2.core.IProcessingComponent;
+import org.carrot2.core.ProcessingComponentConfiguration;
 import org.carrot2.core.ProcessingComponentSuite;
 import org.carrot2.core.ProcessingException;
 import org.carrot2.core.ProcessingResult;
@@ -51,6 +57,7 @@ import org.carrot2.util.attribute.AttributeBinder;
 import org.carrot2.util.attribute.AttributeUtils;
 import org.carrot2.util.attribute.Input;
 import org.carrot2.util.resource.ClassResource;
+import org.carrot2.util.resource.DirLocator;
 import org.carrot2.util.resource.IResource;
 import org.carrot2.util.resource.IResourceLocator;
 import org.carrot2.util.resource.PrefixDecoratorLocator;
@@ -59,7 +66,9 @@ import org.carrot2.util.resource.ResourceLookup.Location;
 import org.carrot2.util.resource.ServletContextLocator;
 import org.carrot2.util.xslt.NopURIResolver;
 
-import com.google.common.collect.*;
+import org.carrot2.shaded.guava.common.collect.ImmutableMap;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * A servlet that parses HTTP POST input in Carrot<sup>2</sup> XML format, clusters it and
@@ -176,18 +185,14 @@ public final class RestProcessorServlet extends HttpServlet
         });
 
         // Aliases for clustering commands.
-        put("rest", new CommandAction() {
+        CommandAction clusteringAction = new CommandAction() {
             public void handle(HttpServletRequest request, HttpServletResponse response) throws Exception
             {
                 handleWwwUrlEncoded(request, response);
             }
-        });
-        put("cluster", new CommandAction() {
-            public void handle(HttpServletRequest request, HttpServletResponse response) throws Exception
-            {
-                handleWwwUrlEncoded(request, response);
-            }
-        });
+        };
+        put("rest", clusteringAction);
+        put("cluster", clusteringAction);
     }};
 
     @Override
@@ -267,9 +272,32 @@ public final class RestProcessorServlet extends HttpServlet
         if (Boolean.getBoolean(ENABLE_CLASSPATH_LOCATOR)) locators
             .add(Location.CONTEXT_CLASS_LOADER.locator);
 
-        controller.init(ImmutableMap.<String, Object> of(
-            AttributeUtils.getKey(DefaultLexicalDataFactory.class, "resourceLookup"),
-            new ResourceLookup(locators)), componentSuite.getComponentConfigurations());
+        // Allow multiple resource lookup paths for different component configurations.
+        String resourceLookupAttrKey = AttributeUtils.getKey(DefaultLexicalDataFactory.class, "resourceLookup");
+        String altResourceLookupAttrKey = "dcs.resource-lookup";
+        ProcessingComponentConfiguration [] configurations = componentSuite.getComponentConfigurations();
+        for (int i = 0; i < configurations.length; i++) {
+            ProcessingComponentConfiguration config = configurations[i];
+            Object location = config.attributes.get(altResourceLookupAttrKey);
+            if (location != null && location instanceof String) {
+                File resourceDir = new File((String) location);
+                if (!resourceDir.isDirectory()) {
+                    Logger.getRootLogger().warn("Not a resource folder, ignored: " + resourceDir);
+                } else {
+                    HashMap<String,Object> mutableMap = new HashMap<String,Object>(config.attributes);
+                    mutableMap.put(resourceLookupAttrKey,
+                        new ResourceLookup(new DirLocator(resourceDir)));
+                    config = configurations[i] = new ProcessingComponentConfiguration(
+                        config.componentClass,
+                        config.componentId,
+                        mutableMap);
+                }
+            }
+        }
+
+        controller.init(
+            ImmutableMap.<String, Object> of(resourceLookupAttrKey, new ResourceLookup(locators)), 
+            configurations);
     }
 
     @Override
@@ -370,6 +398,7 @@ public final class RestProcessorServlet extends HttpServlet
             }
             catch (Exception e)
             {
+                config.logger.error("Trying to parse: " + request.getParameter(DCS_C2STREAM));
                 sendBadRequest("Could not parse Carrot2 XML stream", response, e);
                 return;
             }
@@ -459,7 +488,6 @@ public final class RestProcessorServlet extends HttpServlet
      * @param parameters
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     private void processRequest(HttpServletResponse response, 
         ProcessingResult input, final Map<String, Object> parameters) 
         throws IOException
@@ -644,11 +672,14 @@ public final class RestProcessorServlet extends HttpServlet
 
         contextPath = contextPath.replaceAll("[^a-zA-Z0-9\\-]", "");
         final String catalinaHome = System.getProperty("catalina.home");
-        final String logPrefix = (catalinaHome != null ? catalinaHome + "/logs" : "logs");
+        final File logPrefix = new File(catalinaHome != null ? catalinaHome + "/logs" : "logs");
+        if (!logPrefix.isDirectory()) {
+            logPrefix.mkdirs();
+        }
 
-        final FileAppender appender = new FileAppender(new PatternLayout(
-            "%d{ISO8601} [%-5p] [%c] %m%n"), logPrefix + "/c2-dcs-" + contextPath
-            + "-full.log", true);
+        String logDestination = new File(logPrefix, "/c2-dcs-" + contextPath + "-full.log").getAbsolutePath();
+        final FileAppender appender = 
+            new FileAppender(new PatternLayout("%d{ISO8601} [%-5p] [%c] %m%n"), logDestination, true);
 
         appender.setEncoding(UTF8);
         appender.setImmediateFlush(true);

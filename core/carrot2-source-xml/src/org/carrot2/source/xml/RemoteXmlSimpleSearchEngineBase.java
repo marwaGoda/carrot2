@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -21,6 +21,7 @@ import javax.xml.transform.Templates;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpResponseException;
 import org.carrot2.core.Document;
+import org.carrot2.core.HttpAuthHub;
 import org.carrot2.core.IControllerContext;
 import org.carrot2.core.ProcessingException;
 import org.carrot2.core.ProcessingResult;
@@ -48,7 +49,7 @@ import org.carrot2.util.resource.IResource;
 public abstract class RemoteXmlSimpleSearchEngineBase extends SimpleSearchEngine
 {
     /** A helper class that groups common functionality for XML/XSLT based data sources. */
-    private final XmlDocumentSourceHelper xmlDocumentSourceHelper = new XmlDocumentSourceHelper();
+    public final XmlDocumentSourceHelper xmlDocumentSourceHelper = new XmlDocumentSourceHelper();
 
     /**
      * HTTP redirect response strategy (follow or throw an error).
@@ -159,7 +160,7 @@ public abstract class RemoteXmlSimpleSearchEngineBase extends SimpleSearchEngine
      */
     protected String getUser()
     {
-        return null;
+        return HttpAuthHub.getUser();
     }
 
     /**
@@ -167,7 +168,8 @@ public abstract class RemoteXmlSimpleSearchEngineBase extends SimpleSearchEngine
      */
     protected String getPassword()
     {
-        return null;
+        char[] password = HttpAuthHub.getPassword();
+        return password == null ? null : new String(password);
     }
 
     /**

@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -33,8 +33,9 @@ import org.carrot2.util.attribute.Input;
 import org.carrot2.util.attribute.Output;
 import org.carrot2.util.attribute.Required;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import org.carrot2.shaded.guava.common.base.Joiner;
+import org.carrot2.shaded.guava.common.base.Strings;
+import org.carrot2.shaded.guava.common.collect.Lists;
 
 /**
  * Highlights query words in documents using the &lt;b&gt; HTML tag. Highlighting is
@@ -58,6 +59,16 @@ public class QueryWordHighlighter extends ProcessingComponentBase
     @Attribute(key = "QueryWordHighlighter.enabled")
     public boolean enabled = true;
 
+    /**
+     * Enable or disable query highlighter.
+     */
+    @Init
+    @Processing
+    @Input
+    @Attribute(key = "QueryWordHighlighter.maxContentLength")
+    public int maxContentLength = Integer.MAX_VALUE;
+
+    
     /**
      * A regular expression that disables highlighting for certain terms.
      */
@@ -125,10 +136,14 @@ public class QueryWordHighlighter extends ProcessingComponentBase
     @Override
     public void process() throws ProcessingException
     {
-        // No processing if query is blank
-        if (!enabled || StringUtils.isBlank(query))
+        if (!enabled)
         {
             return;
+        }
+        
+        if (query == null) 
+        {
+            query = "";
         }
 
         // Create regexp patterns for each query word
@@ -140,7 +155,7 @@ public class QueryWordHighlighter extends ProcessingComponentBase
         List<String> patterns = Lists.newArrayList();
         for (String queryTerm : queryTerms)
         {
-            if (queryTerm == null)
+            if (Strings.isNullOrEmpty(queryTerm))
             { 
                 continue;
             }
@@ -185,6 +200,11 @@ public class QueryWordHighlighter extends ProcessingComponentBase
         if (StringUtils.isBlank(field))
         {
             return;
+        }
+        
+        if (field.length() > maxContentLength) 
+        {
+            field = field.substring(0, maxContentLength) + "...";
         }
 
         field = escapeLtGt(field);

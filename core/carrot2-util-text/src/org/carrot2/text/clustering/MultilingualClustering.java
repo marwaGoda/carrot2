@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -20,9 +20,10 @@ import org.carrot2.util.attribute.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.*;
+import org.carrot2.shaded.guava.common.base.Function;
+import org.carrot2.shaded.guava.common.base.Predicate;
+import org.carrot2.shaded.guava.common.collect.*;
+import org.carrot2.shaded.guava.common.collect.Multiset.Entry;
 
 /**
  * A helper for clustering multilingual collections of documents. The helper partitions
@@ -60,7 +61,17 @@ public class MultilingualClustering
          * on the first level of the hierarchy. Each such cluster contains the actual
          * clusters generated for documents in the corresponding language.
          */
-        FLATTEN_NONE("Dedicated parent cluster for each language");
+        FLATTEN_NONE("Dedicated parent cluster for each language"),
+        
+        /**
+         * Clusters all documents assuming the language of the majority of documents.
+         * For example, if 40 documents are English, 30 documents German and 30 French,
+         * all 100 documents will be clustered with English settings. In case of ties,
+         * an arbitrary major language will be chosen. When the majority of documents
+         * have undefined language, {@link MultilingualClustering#defaultLanguage}
+         * will be used.
+         */
+        CLUSTER_IN_MAJORITY_LANGUAGE("Cluster all documents assuming the language of the majority");
         
         private String label;
         
@@ -107,11 +118,44 @@ public class MultilingualClustering
     @Level(AttributeLevel.MEDIUM)
     public LanguageCode defaultLanguage = LanguageCode.ENGLISH;
 
+    /**
+     * Document languages. The number of documents in each language. Empty string key means
+     * unknown language.
+     */
+    @Output
+    @Processing
+    @Attribute
+    @Group(MULTILINGUAL_CLUSTERING)
+    @Level(AttributeLevel.MEDIUM)
+    public Map<String, Integer> languageCounts; 
+    
+    /**
+     * Majority language.
+     * If {@link #languageAggregationStrategy} is 
+     * {@link org.carrot2.text.clustering.MultilingualClustering.LanguageAggregationStrategy#CLUSTER_IN_MAJORITY_LANGUAGE},
+     * this attribute will provide the majority language that was used to cluster all the documents.
+     * If the majority of the documents have undefined language, this attribute will be 
+     * empty and the clustering will be performed in the {@link #defaultLanguage}.
+     */
+    @Output
+    @Processing
+    @Attribute
+    @Group(MULTILINGUAL_CLUSTERING)
+    @Level(AttributeLevel.MEDIUM)
+    public String majorityLanguage = ""; 
+    
     public List<Cluster> process(List<Document> documents, IMonolingualClusteringAlgorithm algorithm)
     {
+        languageCounts = Maps.newHashMap();
+        
         if (documents.isEmpty())
         {
             return Lists.newArrayList();
+        }
+        
+        if (LanguageAggregationStrategy.CLUSTER_IN_MAJORITY_LANGUAGE.equals(languageAggregationStrategy)) 
+        {
+            return clusterInMajorityLanguage(documents, algorithm);
         }
 
         // Clusters documents in each language separately,
@@ -230,6 +274,9 @@ public class MultilingualClustering
             final LanguageCode languageCode = language.equals("") ? null : LanguageCode.valueOf(language);
             final Cluster languageCluster = new Cluster(
                 languageCode != null ? languageCode.toString() : "Unknown Language");
+            
+            languageCounts.put(languageCode != null ? languageCode.getIsoCode() : "",
+                languageDocuments.size());
 
             // Perform clustering
             final LanguageCode currentLanguage = languageCode != null ? languageCode : defaultLanguage;
@@ -250,6 +297,37 @@ public class MultilingualClustering
             clusters.put(languageCode, languageCluster);
         }
 
+        return clusters;
+    }
+    
+    private List<Cluster> clusterInMajorityLanguage(List<Document> documents,
+        IMonolingualClusteringAlgorithm algorithm)
+    {
+        final Multiset<LanguageCode> counts = HashMultiset.create();
+        for (Document d : documents)
+        {
+            counts.add(d.getLanguage());
+        }
+        LanguageCode majorityLanguage = defaultLanguage;
+        int maxCount = 0;
+        for (Entry<LanguageCode> entry : counts.entrySet())
+        {
+            if (entry.getElement() != null)
+            {
+                if (entry.getCount() > maxCount)
+                {
+                    maxCount = entry.getCount();
+                    majorityLanguage = entry.getElement();
+                    this.majorityLanguage = entry.getElement().getIsoCode();
+                }
+            } 
+            languageCounts.put(entry.getElement() != null ? entry.getElement().getIsoCode() : "", 
+                entry.getCount());
+        }
+        
+        logger.debug("Performing clustering in majority language: " + majorityLanguage);
+        final List<Cluster> clusters = algorithm.process(documents, majorityLanguage);
+        Cluster.appendOtherTopics(documents, clusters);
         return clusters;
     }
 }

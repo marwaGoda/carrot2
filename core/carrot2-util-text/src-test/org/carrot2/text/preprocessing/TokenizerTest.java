@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -194,6 +194,22 @@ public class TokenizerTest extends PreprocessingContextTestBase
         assertThat(ctx.allTokens.fieldIndex).isEqualTo(new byte [] {
             0, 0, -1, 1, 1, -1, 0, 0, -1, 1, -1, 0, -1, 1, -1
         });
+    }
+
+    @Test
+    public void testUnicodeNextLine()
+    {
+        PreprocessingContext ctx = contextBuilder
+            .newDoc("Foo\u0085 Bar")
+            .buildContext();
+
+        assertThat(tokens(ctx)).onProperty("tokenImage").isEqualTo(Arrays.asList(
+            "Foo", "Bar", null));
+        
+        assertThat(ctx.allTokens.type).isEqualTo(new short [] {
+            ITokenizer.TT_TERM, ITokenizer.TT_TERM,
+            ITokenizer.TF_TERMINATOR
+            });
     }
 
     // @formatter:on

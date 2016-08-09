@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -30,8 +30,8 @@ import org.carrot2.text.linguistic.LexicalDataLoaderDescriptor;
 import org.carrot2.util.resource.DirLocator;
 import org.carrot2.util.resource.ResourceLookup;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import org.carrot2.shaded.guava.common.collect.Lists;
+import org.carrot2.shaded.guava.common.collect.Maps;
 
 /**
  * This example shows how to configure the location of lexical resources to be something
@@ -42,7 +42,6 @@ public class UsingCustomLexicalResources
 {
     public static void main(String [] args)
     {
-        @SuppressWarnings("unchecked")
         final Controller controller = ControllerFactory.createCachingPooling(IDocumentSource.class);
 
         // We will pass our custom resource locator at initialization time. There is a

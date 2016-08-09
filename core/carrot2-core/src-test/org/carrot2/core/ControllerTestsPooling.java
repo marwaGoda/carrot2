@@ -2,7 +2,7 @@
 /*
  * Carrot2 project.
  *
- * Copyright (C) 2002-2014, Dawid Weiss, Stanisław Osiński.
+ * Copyright (C) 2002-2016, Dawid Weiss, Stanisław Osiński.
  * All rights reserved.
  *
  * Refer to the full license file "carrot2.LICENSE"
@@ -219,19 +219,19 @@ public abstract class ControllerTestsPooling extends ControllerTestsBase
         @Input
         @Attribute(key = "threadSafe")
         @ImplementingClasses(classes = {}, strict = false)
-        ThreadSafeClass threadSafe = new ThreadSafeClass();
+        public ThreadSafeClass threadSafe = new ThreadSafeClass();
 
         @Init
         @Input
         @Attribute(key = "nonThreadSafeInit")
         @ImplementingClasses(classes = {}, strict = false)
-        NonThreadSafeClass nonThreadSafeInit = new NonThreadSafeClass();
+        public NonThreadSafeClass nonThreadSafeInit = new NonThreadSafeClass();
         
         @Processing
         @Input
         @Attribute(key = "nonThreadSafeProcessing")
         @ImplementingClasses(classes = {}, strict = false)
-        NonThreadSafeClass nonThreadSafeProcessing = new NonThreadSafeClass();
+        public NonThreadSafeClass nonThreadSafeProcessing = new NonThreadSafeClass();
     }
     
     @ThreadSafe

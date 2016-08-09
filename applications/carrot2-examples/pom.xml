@@ -14,8 +14,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>1.6</maven.compiler.source>
-    <maven.compiler.target>1.6</maven.compiler.target>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
     <attributes.processor.version>1.0.1</attributes.processor.version>
   </properties>
 
@@ -139,7 +139,7 @@
     <repository>
       <id>sonatype.releases</id>
       <name>Sonatype Releases Repository</name>
-      <url>http://oss.sonatype.org/content/repositories/releases</url>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
       <releases>
         <enabled>true</enabled>
       </releases>
